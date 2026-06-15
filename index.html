@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="robots" content="noindex, nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ショート動画おまかせ生成サービス — 機能紹介とメリット・デメリット</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "Hiragino Sans", "Yu Gothic", "Meiryo", sans-serif;
+    background: #f4f6f9; color: #1a2433; line-height: 1.6;
+    padding: 32px 24px; max-width: 1080px; margin: 0 auto;
+    /* 日本語の折り返しを整える：禁則を守り、対応ブラウザでは文節単位で改行 */
+    word-break: auto-phrase; line-break: strict; text-wrap: pretty;
+  }
+  /* 文（。区切り）ごとに行を分ける。1文が長いときだけ内部で折り返す */
+  .s { display: block; }
+  /* 文節のかたまり。語の途中で改行されないようにする */
+  .wb { display: inline-block; }
+  h1 { font-size: 27px; margin-bottom: 6px; }
+  .lead { color: #5a6b80; font-size: 14.5px; margin-bottom: 24px; }
+  .lead b { color: #0b57d0; }
+  .section { background: #fff; border-radius: 12px; padding: 20px 24px; margin-bottom: 18px;
+             box-shadow: 0 1px 4px rgba(20,40,80,.08); }
+  h2 { font-size: 16px; color: #0b57d0; margin-bottom: 14px; border-left: 4px solid #0b57d0; padding-left: 10px; }
+  h3 { font-size: 13.5px; margin-bottom: 8px; }
+
+  /* ヒーロー：一言で */
+  .hero { background: linear-gradient(135deg,#0b57d0,#1a73e8); color:#fff; border-radius:12px;
+          padding: 22px 26px; margin-bottom: 18px; }
+  .hero .big { font-size: 20px; font-weight: 700; line-height:1.5; }
+  .hero .big em { font-style: normal; background: rgba(255,255,255,.22); padding: 1px 8px; border-radius: 6px; }
+  .hero .sub { font-size: 13px; opacity:.92; margin-top:8px; }
+
+  /* パイプライン（使い方4ステップ） */
+  .pipeline { display: grid; align-items: stretch; }
+  .p4 { grid-template-columns: 1fr 18px 1fr 18px 1fr 18px 1fr; }
+  .step { background: #eef4ff; border: 1.5px solid #b9d0f5; border-radius: 10px;
+          padding: 12px 10px 10px; text-align: center; min-height: 150px;
+          display: flex; flex-direction: column; align-items: center; }
+  .step.human { background: #fff7e6; border-color: #f0cd84; }
+  .step.gate  { background: #eafaf0; border-color: #9fdcb8; }
+  .step .icon { font-size: 26px; line-height: 1.2; }
+  .step .name { font-weight: 700; font-size: 13px; margin: 4px 0 2px; }
+  .step .desc { font-size: 11px; color: #51627a; line-height: 1.45; }
+  .step .tag  { display: inline-block; margin-top: auto; padding-top: 6px; font-size: 10px; font-weight: 700; }
+  .step .tag span { padding: 2px 8px; border-radius: 20px; background: #0b57d0; color: #fff; }
+  .step.human .tag span { background: #c98a00; }
+  .step.gate  .tag span { background: #14843f; }
+  .arrow { display: flex; align-items: center; justify-content: center;
+           color: #8aa0bd; font-size: 16px; font-weight: 700; }
+
+  /* 手に入るもの */
+  .get { display:flex; gap:14px; flex-wrap:wrap; }
+  .get div { flex:1; min-width:200px; background:#f0f4fa; border-radius:10px; padding:14px; text-align:center; }
+  .get .ic { font-size:26px; }
+  .get b { display:block; font-size:14px; margin:6px 0 4px; }
+  .get span { font-size:11.5px; color:#51627a; }
+
+  /* メリット・デメリット */
+  .md-box { display: flex; gap: 14px; flex-wrap: wrap; }
+  .md { flex: 1; min-width: 320px; border-radius: 10px; padding: 16px 18px; font-size: 13px; }
+  .md.good { background: #eafaf0; border: 1.5px solid #9fdcb8; }
+  .md.bad  { background: #fff7ef; border: 1.5px solid #f0cd84; }
+  .md h3 { font-size: 14.5px; margin-bottom: 10px; }
+  .md.good h3 { color:#14843f; }
+  .md.bad  h3 { color:#9a6a00; }
+  .md ul { list-style:none; }
+  .md li { display:flex; gap:8px; margin-bottom:10px; line-height:1.5; }
+  .md li .m { flex-shrink:0; font-weight:700; }
+  .md.good li .m { color:#14843f; }
+  .md.bad  li .m { color:#c98a00; }
+  .md li b { color:#1a2433; }
+  /* 太字の見出し語は途中で改行させない（語の途中で割れるのを防ぐ） */
+  .md li b, .fit li b, .faq b { display: inline-block; }
+
+  /* 向き不向き */
+  .fit { display:flex; gap:14px; flex-wrap:wrap; }
+  .fit div { flex:1; min-width:300px; border-radius:10px; padding:14px 16px; font-size:13px; }
+  .fit .yes { background:#eef4ff; border:1.5px solid #b9d0f5; }
+  .fit .no  { background:#fdf0f2; border:1.5px solid #eebac2; }
+  .fit h3 { margin-bottom:8px; }
+  .fit ul { margin-left:18px; }
+  .fit li { margin-bottom:5px; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { border: 1px solid #dde5ef; padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f4fa; font-size: 12px; }
+
+  .note { font-size: 11.5px; color: #7a8aa0; margin-top: 10px; }
+  .faq dt { font-weight:700; font-size:13.5px; margin-top:12px; }
+  .faq dt:first-child { margin-top:0; }
+  .faq dd { font-size:13px; color:#3a4a5e; margin-top:3px; }
+  @media print { body { background: #fff; padding: 10px; } .section { box-shadow: none; border: 1px solid #ddd; } }
+</style>
+</head>
+<body>
+
+<h1>ショート動画おまかせ生成サービス</h1>
+<p class="lead"><span class="s"><span class="wb">長尺動画のURLを送るだけで、</span><span class="wb"><b>ショート動画の生成・品質採点・</b></span><span class="wb"><b>複数SNSへの自動投稿</b>までを</span><span class="wb">丸ごとおまかせできるサービスです。</span></span><span class="s"><span class="wb">機能の中身と、使う前に知っておきたい</span><span class="wb">メリット・デメリットをまとめました。</span></span></p>
+
+<div class="hero">
+  <div class="big"><span class="s">長尺動画を渡すだけ。</span><span class="s"><em>切り抜き → 採点 → 投稿</em>まで全部おまかせ。</span></div>
+  <div class="sub"><span class="s">専用ソフトのインストールも、編集スキルも不要。</span><span class="s"><span class="wb">あなたがやるのは「URLを送る」と</span><span class="wb">「投稿OKを付ける」の2つだけ。</span></span></div>
+</div>
+
+<div class="section">
+  <h2>使い方：たった2アクション（あとは全自動）</h2>
+  <div class="pipeline p4">
+    <div class="step human">
+      <div class="icon">🔗</div>
+      <div class="name">① URLを送る</div>
+      <div class="desc"><span class="s"><span class="wb">ログインしてフォームに</span><span class="wb">長尺動画のURLを貼るだけ。</span></span><span class="s">ログインがそのまま本人確認に</span></div>
+      <div class="tag"><span>あなた（30秒）</span></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step">
+      <div class="icon">⚙️</div>
+      <div class="name">② 自動で生成・採点</div>
+      <div class="desc"><span class="s"><span class="wb">システムが自動で切り抜きを生成し、</span><span class="wb">AIが品質採点。</span></span><span class="s">出来上がると完了メールが届きます</span></div>
+      <div class="tag"><span>自動（数時間）</span></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step human">
+      <div class="icon">✅</div>
+      <div class="name">③ 投稿OKを付ける</div>
+      <div class="desc"><span class="wb">自分専用フォルダで</span><span class="wb">動画と採点レポートを確認し、</span><span class="wb">出したいものに「投稿OK」を付ける</span></div>
+      <div class="tag"><span>あなた（数分）</span></div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="step gate">
+      <div class="icon">📤</div>
+      <div class="name">④ 自動投稿</div>
+      <div class="desc"><span class="s"><span class="wb">決めた曜日・時刻に</span><span class="wb">YouTubeへ予約投稿。</span></span><span class="s">TikTok・Instagramにも同時展開</span></div>
+      <div class="tag"><span>自動</span></div>
+    </div>
+  </div>
+  <p class="note"><span class="s">※ インストールするもの・覚える操作はありません。</span><span class="s">フォーム入力とフォルダ閲覧だけで完結します。</span></p>
+</div>
+
+<div class="section">
+  <h2>手に入るもの</h2>
+  <div class="get">
+    <div><div class="ic">🎬</div><b>完成ショート動画</b><span>1本の長尺から、20分の動画で約10本・30分の動画で約15本。テロップ・縦型編集済みで、すぐ投稿できる状態</span></div>
+    <div><div class="ic">📄</div><b>採点レポート（PDF）</b><span>1本ずつ5軸でスコア化。なぜ良い／弱いかが言語化され、企画の振り返りに使える</span></div>
+    <div><div class="ic">📅</div><b>自動投稿</b><span>YouTube・TikTok・Instagramへ、決めた曜日・時刻ルールで予約投稿まで</span></div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>ご提供いただくもの</h2>
+  <div class="fit">
+    <div class="yes">
+      <h3>📝 はじめの登録時だけ（初回1回）</h3>
+      <ul>
+        <li><b>投稿先のYouTubeチャンネル</b> — 自動投稿するための投稿権限を連携（認証）いただきます</li>
+        <li><b>TikTok・Instagramのアカウント</b> — 同時展開する媒体ぶんを連携</li>
+        <li><b>チャンネルの軸テーマ・方向性</b> — 採点や投稿設定の初期設定に使わせていただきます</li>
+      </ul>
+    </div>
+    <div class="yes" style="background:#fff7e6;border-color:#f0cd84;">
+      <h3>🔁 毎回送るもの（ご依頼のたび）</h3>
+      <ul>
+        <li><b>長尺動画のURL</b> — これだけ。フォームに貼って送信するだけです</li>
+      </ul>
+      <p class="note" style="margin-top:8px;"><span class="s">※ 連携は初回のみ。</span><span class="s">2回目以降はURLを送るだけで投稿まで進みます。</span><span class="s">媒体やチャンネルを増やしたいときだけ追加連携をお願いします。</span></p>
+    </div>
+  </div>
+  <p class="note"><span class="s">パスワードを直接お預かりすることはありません。</span><span class="s"><span class="wb">YouTube・SNSの連携は各サービス公式の認証画面（OAuth等）を通して行い、</span><span class="wb">投稿に必要な権限のみをいただきます。</span></span></p>
+</div>
+
+<div class="section">
+  <h2>メリット・デメリット（正直なところ）</h2>
+  <div class="md-box">
+    <div class="md good">
+      <h3>✅ メリット</h3>
+      <ul>
+        <li><span class="m">◎</span><div><span class="s"><b>あなたの作業時間はほぼゼロ</b> — 編集ソフトも操作の習得も不要。</span><span class="s">URLを送ったら、あとは手を離して待つだけ。</span></div></li>
+        <li><span class="m">◎</span><div><span class="s"><b>まとめて一気に仕上がる</b> — 1本の長尺から十数本を並行処理。</span><span class="s">手編集なら何時間もかかる切り抜きが、放っておくうちに揃う。</span></div></li>
+        <li><span class="m">◎</span><div><span class="s"><b>多媒体に同時展開</b> — YouTube・TikTok・Instagramへまとめて投稿。</span><span class="s">媒体ごとの貼り直しは不要。</span></div></li>
+        <li><span class="m">◎</span><div><span class="s"><b>質を担保</b> — 全本をAIが採点し、基準点に満たないものは投稿されない。</span><span class="s">数だけ多い量産にならない。</span></div></li>
+        <li><span class="m">◎</span><div><span class="s"><b>最終判断は自分</b> — 投稿するかは本人が「投稿OK」で決める。</span><span class="s">勝手に出ることはない。</span></div></li>
+        <li><span class="m">◎</span><div><span class="s"><b>投稿タイミングもおまかせ</b> — チャンネルごとに決めた曜日・時刻のルールで自動的に予約投稿。</span><span class="s">投稿作業そのものが不要。</span></div></li>
+      </ul>
+    </div>
+    <div class="md bad">
+      <h3>⚠️ デメリット・制約</h3>
+      <ul>
+        <li><span class="m">!</span><div><span class="s"><b>細かいカスタマイズはできない</b> — 編集の仕上がりや採点の基準は決まった形でご提供します。</span><span class="s">「ここのテロップだけ変えて」といった1本ごとの個別調整はできません。</span></div></li>
+        <li><span class="m">!</span><div><span class="s"><b>全部は投稿されない</b> — 採点で基準点に届いたものだけが対象。</span><span class="s">目安として、生成された中で投稿に進むのは半分ほど。</span><span class="s">「とにかく全部出したい」用途には不向き。</span></div></li>
+        <li><span class="m">!</span><div><span class="s"><b>結果は後からまとめて届く</b> — 送ってすぐ出来上がるわけではなく、お届けは数時間後が目安（混雑時は当日〜翌営業日のことも）。</span><span class="s">手は離れますが、「今すぐこの1本だけ」というリアルタイム用途には向かない。</span></div></li>
+        <li><span class="m">!</span><div><span class="s"><b>元になる長尺動画が必要</b> — ゼロから動画を作る機能ではない。</span><span class="s">素材となる長尺がある人向け。</span></div></li>
+        <li><span class="m">!</span><div><span class="s"><b>ジャンルの相性がある</b> — チャンネルの軸テーマに沿った内容が前提。</span><span class="s">テーマと外れた動画は採点で保留になりやすい。</span></div></li>
+        <li><span class="m">!</span><div><span class="s"><b>自動投稿にはアカウント情報の共有が必要</b> — YouTube・SNSへ自動で投稿するため、投稿先アカウントの連携（情報の共有）をいただく必要がある。</span></div></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>こんな人に向いています</h2>
+  <div class="fit">
+    <div class="yes">
+      <h3>👍 向いている</h3>
+      <ul>
+        <li>長尺動画はあるが、切り抜き編集の時間が取れない人</li>
+        <li>YouTube・TikTok・Instagramに横断的に出したい人</li>
+        <li>当てずっぽうでなく、採点で質を担保しながら本数を出したい人</li>
+        <li>定期的（週1〜数本）に長尺を出しているチャンネル運営者</li>
+      </ul>
+    </div>
+    <div class="no">
+      <h3>🙅 向いていない</h3>
+      <ul>
+        <li>1本ごとに凝った独自編集・演出をしたい人</li>
+        <li>生成された動画を全部そのまま出したい人</li>
+        <li>「今すぐ・数分で」仕上げたい単発のニーズ</li>
+        <li>素材となる長尺動画がまだ無い人</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h2>よくある質問</h2>
+  <dl class="faq">
+    <dt>Q. 自分で何かインストールしたり、操作を覚える必要はありますか？</dt>
+    <dd><span class="s">A. ありません。</span><span class="s">フォームにURLを入れる／フォルダで結果を見る、だけです。</span></dd>
+    <dt>Q. 勝手に投稿されてしまいませんか？</dt>
+    <dd><span class="s">A. されません。</span><span class="s">投稿するかどうかは、あなたが1本ずつ「投稿OK」を付けて決めます。</span></dd>
+    <dt>Q. 自分のログイン情報やパスワードを預ける必要は？</dt>
+    <dd><span class="s">A. 個人パスワードはお預かりしません。</span><span class="s">本人確認はログインで行い、変換に使うアカウントはこちらでご用意します。</span></dd>
+    <dt>Q. 何本まで送れますか？</dt>
+    <dd><span class="s">A. 件数の上限はありません。</span><span class="s">たくさん来た場合は順番待ちの列に入り、順次処理されます。</span></dd>
+    <dt>Q. 採点で落ちた動画はどうなりますか？</dt>
+    <dd><span class="s">A. レポートに理由つきで残ります。</span><span class="s">投稿はされませんが、次の企画の参考にできます。</span></dd>
+  </dl>
+</div>
+
+<div class="section" style="border:2px solid #0b57d0;">
+  <h2 style="color:#0b57d0;">使ってみたい方へ</h2>
+  <p style="font-size:13.5px;"><span class="s"><span class="wb">ご利用には、投稿先（YouTube・TikTok・Instagram）アカウントの</span><span class="wb"><b>初回連携</b>が必要です。</span></span><span class="s"><span class="wb">連携は担当者がサポートしながら進めるので、</span><span class="wb">難しい設定は不要です。</span></span><span class="s">興味のある方はお気軽にお問い合わせください。</span></p>
+  <p class="note">作成 2026-06</p>
+</div>
+
+</body>
+</html>
